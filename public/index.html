@@ -1,33 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Simple Calculation</title>
+  <meta charset="UTF-8" />
+  <!--  Ensures proper mobile scaling  -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simple Auth + Calculator</title>
+
+  <!-- ────────────────────────────────────────────────────────────────
+       Quick, minimal styling so the page isn’t ugly.
+       Feel free to delete or swap for Bootstrap/Tailwind later.
+  ────────────────────────────────────────────────────────────────── -->
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; }
+    input  { margin: 0.25rem 0; padding: 0.5rem; width: 100%; }
+    button { padding: 0.5rem 1rem; margin-top: 0.5rem; }
+    section{
+      border: 1px solid #ccc; border-radius: 6px;
+      padding: 1rem; margin-bottom: 2rem;
+    }
+    pre {
+      background: #f3f3f3; padding: 0.8rem;
+      white-space: pre-wrap;                   /* allow long JSON to wrap */
+    }
+  </style>
 </head>
 <body>
-  <h1>Enter Two Numbers</h1>
-  <input type="number" id="a" placeholder="A" />
-  <input type="number" id="b" placeholder="B" />
-  <button onclick="sendToServer()">Calculate</button>
+  <h1>Simple Auth + API Calculator (Render)</h1>
 
-  <h2>Results</h2>
-  <pre id="results"></pre>
+  <!--─────────────────────────────────────────────────────────────-->
+  <!--   1) REGISTER FORM                                         -->
+  <!--─────────────────────────────────────────────────────────────-->
+  <section>
+    <h2>Register</h2>
 
+    <!-- Email input  -->
+    <input id="reg-email" type="email"  placeholder="Email" />
+
+    <!-- Password input -->
+    <input id="reg-pass"  type="password" placeholder="Password" />
+
+    <!-- Button triggers register() JS function -->
+    <button onclick="register()">Register</button>
+
+    <!-- <pre> element shows server response -->
+    <pre id="reg-result"></pre>
+  </section>
+
+  <!--─────────────────────────────────────────────────────────────-->
+  <!--   2) LOGIN FORM                                            -->
+  <!--─────────────────────────────────────────────────────────────-->
+  <section>
+    <h2>Login</h2>
+
+    <!-- Same fields but we’ll reuse them for login -->
+    <input id="log-email" type="email"     placeholder="Email" />
+    <input id="log-pass"  type="password"  placeholder="Password" />
+
+    <button onclick="login()">Login</button>
+
+    <!-- Shows “Logged in” or error json -->
+    <pre id="log-result"></pre>
+  </section>
+
+  <!--─────────────────────────────────────────────────────────────-->
+  <!--   3) CALCULATOR (FOR PROTECTED ROUTE)                      -->
+  <!--─────────────────────────────────────────────────────────────-->
+  <section>
+    <h2>Calculate (requires login)</h2>
+
+    <input id="a" type="number" placeholder="Number a" />
+    <input id="b" type="number" placeholder="Number b" />
+
+    <button onclick="calculate()">Calculate</button>
+
+    <pre id="calc-result"></pre>
+  </section>
+
+  <!--─────────────────────────────────────────────────────────────-->
+  <!--   FRONT-END SCRIPT – 100% client-side JS                   -->
+  <!--─────────────────────────────────────────────────────────────-->
   <script>
-    async function sendToServer() {
+    /**
+     * We'll store the JWT in this variable (memory only).
+     * For persistence, you could use localStorage.
+     */
+    let token = null;
+
+    /* ------------------------------------------------------------
+       REGISTER: POST /register with { email, password }
+       ------------------------------------------------------------*/
+    async function register() {
+      // Grab values from inputs
+      const email    = document.getElementById('reg-email').value;
+      const password = document.getElementById('reg-pass').value;
+
+      // Send to backend
+      const res  = await fetch('/register', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email, password })
+      });
+
+      // Show whatever server responds (success or error JSON)
+      const data = await res.json();
+      document.getElementById('reg-result').textContent =
+        JSON.stringify(data, null, 2);
+    }
+
+    /* ------------------------------------------------------------
+       LOGIN: POST /login, expect { token } back
+       ------------------------------------------------------------*/
+    async function login() {
+      const email    = document.getElementById('log-email').value;
+      const password = document.getElementById('log-pass').value;
+
+      const res  = await fetch('/login', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      // If login successful, server returns { token: '...' }
+      if (data.token) {
+        token = data.token; // save JWT for later requests
+        document.getElementById('log-result').textContent =
+          '✅ Logged in — token stored in memory.';
+      } else {
+        // Show error (e.g., invalid credentials)
+        document.getElementById('log-result').textContent =
+          JSON.stringify(data, null, 2);
+      }
+    }
+
+    /* ------------------------------------------------------------
+       CALCULATE: POST /api/calculate  (requires Bearer token)
+       ------------------------------------------------------------*/
+    async function calculate() {
+      // Read and convert inputs
       const a = parseFloat(document.getElementById('a').value);
       const b = parseFloat(document.getElementById('b').value);
 
-      const response = await fetch('/api/calculate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch('/api/calculate', {
+        method:  'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // The critical part: send token in Authorization header
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ a, b })
       });
 
-      const data = await response.json();
-      document.getElementById('results').textContent = JSON.stringify(data, null, 2);
+      const data = await res.json();
+      document.getElementById('calc-result').textContent =
+        JSON.stringify(data, null, 2);
     }
   </script>
 </body>
 </html>
-
