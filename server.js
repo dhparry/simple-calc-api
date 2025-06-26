@@ -129,12 +129,24 @@ app.post("/api/calculate", authMiddleware, (req, res) => {
    GET /api/scenarios    (protected)
    Returns an array of saved calculations for the logged user
    -----------------------------------------------------------*/
-   app.get('/api/scenarios', authMiddleware, async (req, res) => {
-    const scenarios = await prisma.calculation.findMany({
-      where: { user: { email: req.user.email } },
-      orderBy: { createdAt: 'desc' }
-    });
-    res.json(scenarios);
+  //  app.get('/api/scenarios', authMiddleware, async (req, res) => {
+  //   const scenarios = await prisma.calculation.findMany({
+  //     where: { user: { email: req.user.email } },
+  //     orderBy: { createdAt: 'desc' }
+  //   });
+  //   res.json(scenarios);
+  // });
+
+  app.get("/api/scenarios", async (req, res) => {
+    try {
+      const scenarios = await prisma.calculation.findMany({
+        orderBy: { createdAt: "desc" },
+      });
+      res.json(scenarios);
+    } catch (err) {
+      console.error("❌ Error in /api/scenarios:", err);
+      res.status(500).json({ error: "Server error" });
+    }
   });
 
 /* ── START SERVER ───────────────────────────────────────────── */
