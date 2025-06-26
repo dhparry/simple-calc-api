@@ -1,271 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Terra • Auth & Calculator</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Terra • Auth & Calculator</title>
 
-  <!--────────────────────────────────────────────────────────────
-      BASIC STYLES  —  pure CSS for clarity (no frameworks yet)
-      Feel free to swap in Tailwind / Bootstrap later.
-  ────────────────────────────────────────────────────────────-->
-  <style>
-    :root {
-      --terra-green: #009970;
-      --light-gray : #f3f3f3;
-    }
-
-    /* Layout helpers */
-    body,html { margin:0; padding:0; height:100%; font-family:sans-serif; }
-    .center    { display:flex; flex-direction:column; align-items:center; justify-content:center; }
-    .hidden    { display:none; }
-
-    /* Landing */
-    #landing h1 {
-      font-size:3.5rem; margin:0; color:var(--terra-green);
-    }
-    #landing button {
-      width:180px; padding:0.7rem 1rem; margin:0.5rem 0;
-      font-size:1rem; border:none; border-radius:6px;
-      background:var(--terra-green);  color:#fff;  cursor:pointer;
-    }
-
-    /* Card panels */
-    .card {
-      width: min(90%, 420px);
-      border:1px solid #ccc; border-radius:8px; padding:1.5rem;
-      background:#fff; box-shadow:0 4px 10px rgba(0,0,0,0.06);
-      margin:2rem auto;
-    }
-    .card h2 { margin-top:0; }
-
-    /* Inputs */
-    .card input {
-      width:100%; padding:0.6rem; margin:0.3rem 0 0.8rem 0;
-      border:1px solid #ccc; border-radius:4px;
-    }
-    .card button {
-      width:100%; padding:0.7rem; border:none; border-radius:4px;
-      background:var(--terra-green); color:#fff; cursor:pointer;
-      font-size:1rem;
-    }
-    .error { color:#c0392b; margin-top:0.3rem; white-space:pre-wrap; }
-    pre {
-      background:var(--light-gray); padding:0.8rem; white-space:pre-wrap;
-    }
-  </style>
+<!-- Simple styling (swap for Tailwind later if you like) -->
+<style>
+ :root{--green:#009970;--gray:#f3f3f3}
+ body,html{margin:0;height:100%;font-family:sans-serif}
+ .center{display:flex;flex-direction:column;align-items:center;justify-content:center}
+ .hidden{display:none}
+ #landing h1{font-size:3.5rem;margin:0;color:var(--green)}
+ #landing button{width:180px;padding:.7rem 1rem;margin:.5rem 0;font-size:1rem;border:none;border-radius:6px;background:var(--green);color:#fff;cursor:pointer}
+ .card{width:min(90%,420px);border:1px solid #ccc;border-radius:8px;padding:1.5rem;margin:2rem auto;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,.06)}
+ .card input{width:100%;padding:.6rem;margin:.3rem 0 .8rem;border:1px solid #ccc;border-radius:4px}
+ .card button{width:100%;padding:.7rem;border:none;border-radius:4px;background:var(--green);color:#fff;font-size:1rem;cursor:pointer}
+ pre{background:var(--gray);padding:.8rem;white-space:pre-wrap}
+ .error{color:#c0392b;margin-top:.3rem;white-space:pre-wrap}
+</style>
 </head>
 
 <body>
-
-<!--──────────────────────────────────────────────────────────────
-    1)  LANDING  — shown first
-──────────────────────────────────────────────────────────────-->
+<!-- 1️⃣ Landing -->
 <section id="landing" class="center" style="height:100%;">
   <h1>Terra</h1>
-
-  <!-- Buttons simply toggle which panel is visible -->
-  <button onclick="showPanel('login-card')">Login</button>
-  <button onclick="showPanel('register-card')">Register</button>
+  <button onclick="show('login')">Login</button>
+  <button onclick="show('register')">Register</button>
 </section>
 
-
-<!--──────────────────────────────────────────────────────────────
-    2)  REGISTER PANEL  — hidden by default
-──────────────────────────────────────────────────────────────-->
-<section id="register-card" class="card hidden">
+<!-- 2️⃣ Register -->
+<section id="register" class="card hidden">
   <h2>Create account</h2>
-
-  <input id="reg-email"    type="email"    placeholder="Email">
-  <input id="reg-pass1"    type="password" placeholder="Password">
-  <input id="reg-pass2"    type="password" placeholder="Confirm password">
-
-  <div id="reg-error" class="error"></div>
-
+  <input id="reg-email" type="email"    placeholder="Email">
+  <input id="reg-pass1" type="password" placeholder="Password">
+  <input id="reg-pass2" type="password" placeholder="Confirm password">
+  <div id="reg-err" class="error"></div>
   <button onclick="register()">Register</button>
-  <pre id="reg-result"></pre>
-
-  <p style="text-align:center; margin-top:1rem;">
-    Already have an account?
-    <a href="#" onclick="showPanel('login-card'); return false;">Log in</a>
-  </p>
+  <pre id="reg-res"></pre>
+  <p style="text-align:center;margin-top:1rem;">Have an account?
+     <a href="#" onclick="show('login');return false;">Log in</a></p>
 </section>
 
-
-<!--──────────────────────────────────────────────────────────────
-    3)  LOGIN PANEL  — hidden by default
-──────────────────────────────────────────────────────────────-->
-<section id="login-card" class="card hidden">
+<!-- 3️⃣ Login -->
+<section id="login" class="card hidden">
   <h2>Welcome back</h2>
-
   <input id="log-email" type="email"    placeholder="Email">
   <input id="log-pass"  type="password" placeholder="Password">
-
-  <div id="log-error" class="error"></div>
-
+  <div id="log-err" class="error"></div>
   <button onclick="login()">Login</button>
-  <pre id="log-result"></pre>
-
-  <p style="text-align:center; margin-top:1rem;">
-    Need an account?
-    <a href="#" onclick="showPanel('register-card'); return false;">Register</a>
-  </p>
+  <pre id="log-res"></pre>
+  <p style="text-align:center;margin-top:1rem;">Need an account?
+     <a href="#" onclick="show('register');return false;">Register</a></p>
 </section>
 
-
-<!--──────────────────────────────────────────────────────────────
-    4)  CALCULATOR PANEL  — hidden until authenticated
-──────────────────────────────────────────────────────────────-->
-<section id="calc-card" class="card hidden">
-  <h2>Calculator (JWT protected)</h2>
-
+<!-- 4️⃣ Calculator -->
+<section id="calc" class="card hidden">
+  <h2>Calculator (saved)</h2>
+  <input id="scenario-name" placeholder="Scenario name">
   <input id="a" type="number" placeholder="Number a">
   <input id="b" type="number" placeholder="Number b">
+  <button onclick="saveAndCalc()">Save & Calculate</button>
+  <pre id="calc-res"></pre>
 
-  <button onclick="calculate()">Calculate</button>
+  <h3 style="margin-top:1.3rem;">Saved scenarios</h3>
+  <select id="scenario-list" style="width:100%;"></select>
+  <button onclick="loadScenario()">Load</button>
 
-  <pre id="calc-result"></pre>
-
-  <p style="text-align:center; margin-top:1rem;">
-    <a href="#" onclick="logout(); return false;">Log out</a>
-  </p>
+  <p style="text-align:center;margin-top:1rem;">
+     <a href="#" onclick="logout();return false;">Log out</a></p>
 </section>
 
-
-<!--──────────────────────────────────────────────────────────────
-    5)  FRONT-END SCRIPT
-──────────────────────────────────────────────────────────────-->
 <script>
-  /*──────────────────────────────────────────────────────────
-      GLOBAL STATE
-  ──────────────────────────────────────────────────────────*/
-  let token = null;        // holds JWT (not persisted between refreshes)
-  const pwdRegex =
-    /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/; // ≥8 chars, cap, number, symbol
+/* ========= State & helpers =========== */
+let token=null;
+const pwdRx=/^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+const panels=['landing','login','register','calc'];
+function show(id){panels.forEach(p=>document.getElementById(p).classList.add('hidden'));
+                 document.getElementById(id).classList.remove('hidden');}
 
-  /*──────────────────────────────────────────────────────────
-      UI HELPERS
-  ──────────────────────────────────────────────────────────*/
-  /**
-   * Hide all major panels, then show the requested one.
-   * @param {string} id  – id of the panel to show
-   */
-  function showPanel(id) {
-    ['landing','register-card','login-card','calc-card']
-      .forEach(el => document.getElementById(el).classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
+/* ========= Register ========= */
+async function register(){
+  const em=document.getElementById('reg-email').value.trim();
+  const p1=document.getElementById('reg-pass1').value;
+  const p2=document.getElementById('reg-pass2').value;
+  const err=document.getElementById('reg-err'); err.textContent='';
+  if(!em||!p1||!p2){err.textContent='All fields required';return;}
+  if(p1!==p2){err.textContent='Passwords do not match';return;}
+  if(!pwdRx.test(p1)){err.textContent='Weak password (≥8, cap, num, symbol)';return;}
+  const res=await fetch('/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,password:p1})});
+  document.getElementById('reg-res').textContent=await res.text();
+  if(res.ok){show('login');document.getElementById('log-email').value=em;}
+}
 
-    // Clear any error/result boxes when switching
-    ['reg-error','log-error','reg-result','log-result'].forEach(el=>{
-      const box = document.getElementById(el);
-      if (box) box.textContent = '';
-    });
-  }
+/* ========= Login ========= */
+async function login(){
+  const em=document.getElementById('log-email').value.trim();
+  const pw=document.getElementById('log-pass').value;
+  const err=document.getElementById('log-err'); err.textContent='';
+  if(!em||!pw){err.textContent='Email & password required';return;}
+  const r=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,password:pw})});
+  const data=await r.json();
+  if(r.ok&&data.token){token=data.token;show('calc');refreshList();}
+  else err.textContent=data.error||'Login failed';
+}
 
-  /*──────────────────────────────────────────────────────────
-      REGISTER  (POST /register)
-  ──────────────────────────────────────────────────────────*/
-  async function register() {
-    const email = document.getElementById('reg-email').value.trim();
-    const p1    = document.getElementById('reg-pass1').value;
-    const p2    = document.getElementById('reg-pass2').value;
-    const errBox= document.getElementById('reg-error');
-    errBox.textContent = '';                      // reset error
+/* ========= Save & Calculate ========= */
+async function saveAndCalc(){
+  if(!token){alert('Login first');return;}
+  const name=document.getElementById('scenario-name').value.trim()||'Untitled';
+  const a=parseFloat(document.getElementById('a').value);
+  const b=parseFloat(document.getElementById('b').value);
+  const r=await fetch('/api/calculate',{method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body:JSON.stringify({name,a,b})});
+  const data=await r.json();
+  document.getElementById('calc-res').textContent=JSON.stringify(data,null,2);
+  if(r.ok) refreshList();
+}
 
-    /* Client-side validation */
-    if (!email || !p1 || !p2) {
-      errBox.textContent = 'All fields required';
-      return;
-    }
-    if (p1 !== p2) {
-      errBox.textContent = 'Passwords do not match';
-      return;
-    }
-    if (!pwdRegex.test(p1)) {
-      errBox.textContent =
-        'Password must be ≥8 chars and include:\n• one capital\n• one number\n• one symbol';
-      return;
-    }
+/* ========= Load list & scenario ========= */
+async function refreshList(){
+  const r=await fetch('/api/scenarios',{headers:{'Authorization':'Bearer '+token}});
+  const list=await r.json();
+  const sel=document.getElementById('scenario-list');
+  sel.innerHTML='';
+  list.forEach(sc=>{
+     const o=document.createElement('option');
+     o.value=JSON.stringify(sc);          // store full row for easy use
+     o.text=`${sc.name}  (a=${sc.a}, b=${sc.b})`;
+     sel.appendChild(o);
+  });
+}
+function loadScenario(){
+  const sel=document.getElementById('scenario-list');
+  if(!sel.value){alert('Choose a scenario');return;}
+  const sc=JSON.parse(sel.value);
+  document.getElementById('scenario-name').value=sc.name;
+  document.getElementById('a').value=sc.a;
+  document.getElementById('b').value=sc.b;
+  document.getElementById('calc-res').textContent='Loaded scenario #'+sc.id;
+}
 
-    /* Send to backend */
-    const res  = await fetch('/register', {
-      method: 'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body:   JSON.stringify({ email, password:p1 })
-    });
-
-    const data = await res.json();
-    document.getElementById('reg-result').textContent =
-      JSON.stringify(data,null,2);
-
-    if (res.ok) {                          // success → switch to login
-      document.getElementById('reg-result').textContent =
-        '✅ Registered — now log in.';
-      showPanel('login-card');
-      document.getElementById('log-email').value = email; // prefill for convenience
-    }
-  }
-
-  /*──────────────────────────────────────────────────────────
-      LOGIN  (POST /login)
-  ──────────────────────────────────────────────────────────*/
-  async function login() {
-    const email = document.getElementById('log-email').value.trim();
-    const password = document.getElementById('log-pass').value;
-    const errBox   = document.getElementById('log-error');
-    errBox.textContent = '';
-
-    if (!email || !password) {
-      errBox.textContent = 'Email + password required';
-      return;
-    }
-
-    const res  = await fetch('/login', {
-      method: 'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body:   JSON.stringify({ email, password })
-    });
-
-    const data = await res.json();
-    if (res.ok && data.token) {
-      token = data.token;           // save JWT in memory
-      showPanel('calc-card');       // reveal calculator
-    } else {
-      errBox.textContent = data.error || 'Login failed';
-    }
-  }
-
-  /*──────────────────────────────────────────────────────────
-      CALCULATE  (POST /api/calculate) – protected
-  ──────────────────────────────────────────────────────────*/
-  async function calculate() {
-    if (!token) { alert('Please log in first'); return; }
-
-    const a = parseFloat(document.getElementById('a').value);
-    const b = parseFloat(document.getElementById('b').value);
-
-    const res = await fetch('/api/calculate', {
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'Authorization':`Bearer ${token}`
-      },
-      body:JSON.stringify({ a, b })
-    });
-
-    const data = await res.json();
-    document.getElementById('calc-result').textContent =
-      JSON.stringify(data,null,2);
-  }
-
-  /*──────────────────────────────────────────────────────────
-      LOGOUT  – simply forget the token and return to landing
-  ──────────────────────────────────────────────────────────*/
-  function logout() {
-    token = null;
-    showPanel('landing');
-  }
+/* ========= Logout ========= */
+function logout(){token=null;show('landing');}
 </script>
-
 </body>
 </html>

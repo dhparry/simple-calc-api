@@ -125,14 +125,17 @@ app.post("/api/calculate", authMiddleware, (req, res) => {
   });
 });
 
-app.get("/api/scenarios", authMiddleware, async (req, res) => {
-  const user = await prisma.user.findUnique({
-    where: { email: req.user.email },
-    include: { calculations: true },
+/* -----------------------------------------------------------
+   GET /api/scenarios    (protected)
+   Returns an array of saved calculations for the logged user
+   -----------------------------------------------------------*/
+   app.get('/api/scenarios', authMiddleware, async (req, res) => {
+    const scenarios = await prisma.calculation.findMany({
+      where: { user: { email: req.user.email } },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(scenarios);
   });
-
-  res.json(user.calculations);
-});
 
 /* ── START SERVER ───────────────────────────────────────────── */
 app.listen(PORT, () => {
