@@ -125,6 +125,15 @@ app.post("/api/calculate", authMiddleware, (req, res) => {
   });
 });
 
+app.get("/api/scenarios", authMiddleware, async (req, res) => {
+  const user = await prisma.user.findUnique({
+    where: { email: req.user.email },
+    include: { calculations: true },
+  });
+
+  res.json(user.calculations);
+});
+
 /* ── START SERVER ───────────────────────────────────────────── */
 app.listen(PORT, () => {
   console.log(`✅  Server running on http://localhost:${PORT}`);

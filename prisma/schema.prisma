@@ -1,15 +1,33 @@
+// ---------- Datasource (PostgreSQL on Render) ----------
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+// ---------- Prisma Client generator ----------
 generator client {
   provider = "prisma-client-js"
 }
 
+// ---------- USER (unchanged) ----------
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
+  id           Int           @id @default(autoincrement())
+  email        String        @unique
   passwordHash String
-  createdAt    DateTime @default(now())
+  calculations Calculation[] // 1-to-many
+}
+
+// ---------- CALCULATION (new) ----------
+model Calculation {
+  id        Int      @id @default(autoincrement())
+  name      String
+  a         Float
+  b         Float
+  sum       Float
+  division  Float?
+  createdAt DateTime @default(now())
+
+  // FK → User
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
 }
