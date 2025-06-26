@@ -112,39 +112,43 @@ app.post("/login", async (req, res) => {
  *  Body:     { "a": 10, "b": 5 }
  *  Returns:  { user, sum, division }
  */
-/* ========= POST /api/calculate (protected) ========= */
+//* ========= POST /api/calculate (protected) ========= */
 app.post('/api/calculate', authMiddleware, async (req, res) => {
-  const { name = 'Untitled', a, b } = req.body;        // ⬅️ grab name
-  const numA = parseFloat(a);
-  const numB = parseFloat(b);
+  try {
+    // 1️⃣ pull all needed fields from the body
+    const {
+      name = 'Untitled',
+      project = 'General',   // 👈 project now included
+      a,
+      b
+    } = req.body;
 
-  if (Number.isNaN(numA) || Number.isNaN(numB)) {
-    return res.status(400).json({ error: 'Invalid input numbers' });
-  }
+    const numA = parseFloat(a);
+    const numB = parseFloat(b);
 
-  /* Save to DB first */
-  const calc = await prisma.calculation.create({
-    data: {
-      project,
-      name,
-      a: numA,
-      b: numB,
-      sum: numA + numB,
-      division: numB ? numA / numB : null,
-      userId: req.user.id             // FK
+    if (Number.isNaN(numA) || Number.isNaN(numB)) {
+      return res.status(400).json({ error: 'Invalid input numbers' });
     }
-  });
 
-  /* Respond with the newly-saved row */
-  res.json({
-    id:        calc.id,
-    name:      calc.name,
-    a:         calc.a,
-    b:         calc.b,
-    sum:       calc.sum,
-    division:  calc.division,
-    createdAt: calc.createdAt
-  });
+    // 2️⃣ save to the database
+    const calc = await prisma.calculation.create({
+      data: {
+        project,
+        name,
+        a: numA,
+        b: numB,
+        sum: numA + numB,
+        division: numB ? numA / numB : null,
+        userId: req.user.id
+      }
+    });
+
+    // 3️⃣ respond with the saved row
+    res.json(calc);          // you can shorten to this, or send custom fields
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 /* -----------------------------------------------------------
