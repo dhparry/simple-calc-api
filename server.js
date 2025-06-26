@@ -157,6 +157,24 @@ app.post('/api/calculate', authMiddleware, async (req, res) => {
   //   });
   //   res.json(scenarios);
   // });
+  
+/**
+ * DELETE /api/scenarios/:id   (protected)
+ * Deletes a scenario by ID, only if it belongs to the logged-in user
+ */
+app.delete("/api/scenarios/:id", authMiddleware, async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ error: "Invalid scenario ID" });
+
+  // Ensure the scenario belongs to the logged-in user
+  const scenario = await prisma.calculation.findUnique({ where: { id } });
+  if (!scenario || scenario.userId !== req.user.id)
+    return res.status(403).json({ error: "Not authorized to delete this scenario" });
+
+  await prisma.calculation.delete({ where: { id } });
+  res.json({ message: "Scenario deleted" });
+});
+
 
   app.get("/api/scenarios", authMiddleware, async (req, res) => {
     const scenarios = await prisma.calculation.findMany({
