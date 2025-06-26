@@ -131,6 +131,8 @@
     <!-- 4️⃣ Calculator -->
     <section id="calc" class="card hidden">
       <h2>Calculator (saved)</h2>
+      <h3>Save under project</h3>
+      <input id="project-name" placeholder="e.g. My Development Site" />
       <input id="scenario-name" placeholder="Scenario name" />
       <input id="a" type="number" placeholder="Number a" />
       <input id="b" type="number" placeholder="Number b" />
@@ -138,11 +140,26 @@
       <pre id="calc-res"></pre>
 
       <h3 style="margin-top: 1.3rem">Saved scenarios</h3>
-      <select id="scenario-list" style="width: 100%">
-        <option value="">-- Select a saved scenario --</option>
+
+      <!-- Project dropdown -->
+      <h3 style="margin-top: 1.3rem">Saved Projects</h3>
+      <select
+        id="project-list"
+        onchange="onProjectChange()"
+        style="width: 100%"
+      >
+        <option value="">-- Select a project --</option>
       </select>
+
+      <!-- Scenario dropdown -->
+      <h3 style="margin-top: 1.3rem">Scenarios in selected project</h3>
+      <select id="scenario-list" style="width: 100%">
+        <option value="">-- Select a scenario --</option>
+      </select>
+
+      <!-- Buttons -->
       <button id="load-btn">Load</button>
-      <button onclick="deleteScenario()" style="background:#c0392b; margin-top: 0.5rem;">Delete</button>
+      <button onclick="deleteScenario()">Delete</button>
 
       <p style="text-align: center; margin-top: 1rem">
         <a href="#" id="logout">Log out</a>
@@ -151,6 +168,8 @@
 
     <!-- ✅ Script at end to ensure all DOM is ready -->
     <script>
+      let allScenarios = []; // 👈 Stores all fetched scenarios for the user
+
       let token = null;
       const pwdRx = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
       const panels = ["landing", "login", "register", "calc"];
@@ -223,9 +242,12 @@
       }
 
       async function saveAndCalc() {
-        if (!token) return alert("Please log in first.");
         const name =
           document.getElementById("scenario-name").value.trim() || "Untitled";
+        const project =
+          document.getElementById("project-name").value.trim() || "General"; // 👈 NEW
+
+        if (!token) return alert("Please log in first.");
         const a = parseFloat(document.getElementById("a").value);
         const b = parseFloat(document.getElementById("b").value);
 
@@ -235,7 +257,7 @@
             "Content-Type": "application/json",
             Authorization: "Bearer " + token,
           },
-          body: JSON.stringify({ name, a, b }),
+          body: JSON.stringify({ name, project, a, b }),
         });
 
         const data = await r.json();
@@ -251,19 +273,42 @@
         const r = await fetch("/api/scenarios", {
           headers: { Authorization: "Bearer " + token },
         });
+        const data = await r.json();
+        if (!Array.isArray(data))
+          return console.error("Invalid response", data);
 
-        const list = await r.json();
-        const sel = document.getElementById("scenario-list");
-        sel.innerHTML =
-          '<option value="">-- Select a saved scenario --</option>';
-        list.forEach((sc) => {
-          const o = document.createElement("option");
-          o.value = JSON.stringify(sc);
-          o.textContent = `${sc.name} (a=${sc.a}, b=${sc.b})`;
-          sel.appendChild(o);
+        allScenarios = data;
+
+        // Get distinct projects
+        const projects = [...new Set(allScenarios.map((s) => s.project))];
+        const projectSel = document.getElementById("project-list");
+        projectSel.innerHTML =
+          '<option value="">-- Select a project --</option>';
+        projects.forEach((project) => {
+          const opt = document.createElement("option");
+          opt.value = opt.textContent = project;
+          projectSel.appendChild(opt);
         });
+
+        // Clear scenario list initially
+        document.getElementById("scenario-list").innerHTML =
+          '<option value="">-- Select a scenario --</option>';
       }
 
+      function onProjectChange() {
+        const project = document.getElementById("project-list").value;
+        const scenarioSel = document.getElementById("scenario-list");
+        scenarioSel.innerHTML =
+          '<option value="">-- Select a scenario --</option>';
+
+        const filtered = allScenarios.filter((s) => s.project === project);
+        filtered.forEach((sc) => {
+          const opt = document.createElement("option");
+          opt.value = JSON.stringify(sc);
+          opt.textContent = `${sc.name} (a=${sc.a}, b=${sc.b})`;
+          scenarioSel.appendChild(opt);
+        });
+      }
       function loadScenario() {
         const sel = document.getElementById("scenario-list");
         if (!sel.value) return alert("Choose a scenario");

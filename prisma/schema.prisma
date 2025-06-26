@@ -20,14 +20,14 @@ model User {
 // ---------- CALCULATION (new) ----------
 model Calculation {
   id        Int      @id @default(autoincrement())
+  project   String   // 👈 NEW: project grouping name
   name      String
   a         Float
   b         Float
   sum       Float
   division  Float?
   createdAt DateTime @default(now())
-
-  // FK → User
-  user   User @relation(fields: [userId], references: [id])
-  userId Int
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
 }
+

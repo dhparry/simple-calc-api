@@ -125,6 +125,7 @@ app.post('/api/calculate', authMiddleware, async (req, res) => {
   /* Save to DB first */
   const calc = await prisma.calculation.create({
     data: {
+      project,
       name,
       a: numA,
       b: numB,
@@ -157,7 +158,7 @@ app.post('/api/calculate', authMiddleware, async (req, res) => {
   //   });
   //   res.json(scenarios);
   // });
-  
+
 /**
  * DELETE /api/scenarios/:id   (protected)
  * Deletes a scenario by ID, only if it belongs to the logged-in user
