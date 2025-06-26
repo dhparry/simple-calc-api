@@ -38,19 +38,18 @@ app.use(express.static("public"));
  *  If missing/invalid → 401 / 403
  */
 function authMiddleware(req, res, next) {
-  const hdr = req.headers["authorization"]; // ex: "Bearer abc.def.ghi"
-  if (!hdr) return res.status(401).json({ error: "No token provided" });
+  const hdr = req.headers.authorization || "";
+  const token = hdr.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "Missing token" });
 
-  const token = hdr.split(" ")[1]; // grab part after "Bearer"
   try {
-    const decoded = jwt.verify(token, SECRET_KEY); // throws if invalid/expired
-    req.user = decoded; // make user data available
-    next(); // continue to route handler
+    const decoded = jwt.verify(token, SECRET_KEY); // { id, email, iat, exp }
+    req.user = decoded; // 👈 now defined
+    next();
   } catch (err) {
-    return res.status(403).json({ error: "Invalid or expired token" });
+    return res.status(401).json({ error: "Invalid or expired token" });
   }
 }
-
 /* ── ROUTES ──────────────────────────────────────────────────── */
 
 /**
@@ -99,7 +98,11 @@ app.post("/login", async (req, res) => {
   if (!ok) return res.status(400).json({ error: "Invalid credentials" });
 
   /* Sign token – payload kept light */
-  const token = jwt.sign({ email }, SECRET_KEY, { expiresIn: "1h" });
+  const token = jwt.sign(
+    { id: user.id, email: user.email }, // 👈 include both!
+    SECRET_KEY,
+    { expiresIn: "1h" }
+  );
   return res.json({ token });
 });
 
@@ -109,19 +112,37 @@ app.post("/login", async (req, res) => {
  *  Body:     { "a": 10, "b": 5 }
  *  Returns:  { user, sum, division }
  */
-app.post("/api/calculate", authMiddleware, (req, res) => {
-  const { a, b } = req.body;
-
+/* ========= POST /api/calculate (protected) ========= */
+app.post('/api/calculate', authMiddleware, async (req, res) => {
+  const { name = 'Untitled', a, b } = req.body;        // ⬅️ grab name
   const numA = parseFloat(a);
   const numB = parseFloat(b);
 
-  if (Number.isNaN(numA) || Number.isNaN(numB))
-    return res.status(400).json({ error: "Invalid input numbers" });
+  if (Number.isNaN(numA) || Number.isNaN(numB)) {
+    return res.status(400).json({ error: 'Invalid input numbers' });
+  }
 
+  /* Save to DB first */
+  const calc = await prisma.calculation.create({
+    data: {
+      name,
+      a: numA,
+      b: numB,
+      sum: numA + numB,
+      division: numB ? numA / numB : null,
+      userId: req.user.id             // FK
+    }
+  });
+
+  /* Respond with the newly-saved row */
   res.json({
-    user: req.user.email,
-    sum: numA + numB,
-    division: numB !== 0 ? numA / numB : null,
+    id:        calc.id,
+    name:      calc.name,
+    a:         calc.a,
+    b:         calc.b,
+    sum:       calc.sum,
+    division:  calc.division,
+    createdAt: calc.createdAt
   });
 });
 
@@ -137,17 +158,12 @@ app.post("/api/calculate", authMiddleware, (req, res) => {
   //   res.json(scenarios);
   // });
 
-  app.get("/api/scenarios", async (req, res) => {
-    try {
-      const scenarios = await prisma.calculation.findMany({
-        where: { user: { email: req.user.email } },
-        orderBy: { createdAt: "desc" },
-      });
-      res.json(scenarios);
-    } catch (err) {
-      console.error("❌ Error in /api/scenarios:", err);
-      res.status(500).json({ error: "Server error" });
-    }
+  app.get("/api/scenarios", authMiddleware, async (req, res) => {
+    const scenarios = await prisma.calculation.findMany({
+      where: { userId: req.user.id }, // 👈 use id, not email
+      orderBy: { createdAt: "desc" },
+    });
+    res.json(scenarios);
   });
 
 /* ── START SERVER ───────────────────────────────────────────── */
