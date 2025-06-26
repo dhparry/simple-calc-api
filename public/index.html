@@ -2,160 +2,270 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!--  Ensures proper mobile scaling  -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simple Auth + Calculator</title>
+  <title>Terra • Auth & Calculator</title>
 
-  <!-- ────────────────────────────────────────────────────────────────
-       Quick, minimal styling so the page isn’t ugly.
-       Feel free to delete or swap for Bootstrap/Tailwind later.
-  ────────────────────────────────────────────────────────────────── -->
+  <!--────────────────────────────────────────────────────────────
+      BASIC STYLES  —  pure CSS for clarity (no frameworks yet)
+      Feel free to swap in Tailwind / Bootstrap later.
+  ────────────────────────────────────────────────────────────-->
   <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; }
-    input  { margin: 0.25rem 0; padding: 0.5rem; width: 100%; }
-    button { padding: 0.5rem 1rem; margin-top: 0.5rem; }
-    section{
-      border: 1px solid #ccc; border-radius: 6px;
-      padding: 1rem; margin-bottom: 2rem;
+    :root {
+      --terra-green: #009970;
+      --light-gray : #f3f3f3;
     }
+
+    /* Layout helpers */
+    body,html { margin:0; padding:0; height:100%; font-family:sans-serif; }
+    .center    { display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .hidden    { display:none; }
+
+    /* Landing */
+    #landing h1 {
+      font-size:3.5rem; margin:0; color:var(--terra-green);
+    }
+    #landing button {
+      width:180px; padding:0.7rem 1rem; margin:0.5rem 0;
+      font-size:1rem; border:none; border-radius:6px;
+      background:var(--terra-green);  color:#fff;  cursor:pointer;
+    }
+
+    /* Card panels */
+    .card {
+      width: min(90%, 420px);
+      border:1px solid #ccc; border-radius:8px; padding:1.5rem;
+      background:#fff; box-shadow:0 4px 10px rgba(0,0,0,0.06);
+      margin:2rem auto;
+    }
+    .card h2 { margin-top:0; }
+
+    /* Inputs */
+    .card input {
+      width:100%; padding:0.6rem; margin:0.3rem 0 0.8rem 0;
+      border:1px solid #ccc; border-radius:4px;
+    }
+    .card button {
+      width:100%; padding:0.7rem; border:none; border-radius:4px;
+      background:var(--terra-green); color:#fff; cursor:pointer;
+      font-size:1rem;
+    }
+    .error { color:#c0392b; margin-top:0.3rem; white-space:pre-wrap; }
     pre {
-      background: #f3f3f3; padding: 0.8rem;
-      white-space: pre-wrap;                   /* allow long JSON to wrap */
+      background:var(--light-gray); padding:0.8rem; white-space:pre-wrap;
     }
   </style>
 </head>
+
 <body>
-  <h1>Simple Auth + API Calculator (Render)</h1>
 
-  <!--─────────────────────────────────────────────────────────────-->
-  <!--   1) REGISTER FORM                                         -->
-  <!--─────────────────────────────────────────────────────────────-->
-  <section>
-    <h2>Register</h2>
+<!--──────────────────────────────────────────────────────────────
+    1)  LANDING  — shown first
+──────────────────────────────────────────────────────────────-->
+<section id="landing" class="center" style="height:100%;">
+  <h1>Terra</h1>
 
-    <!-- Email input  -->
-    <input id="reg-email" type="email"  placeholder="Email" />
+  <!-- Buttons simply toggle which panel is visible -->
+  <button onclick="showPanel('login-card')">Login</button>
+  <button onclick="showPanel('register-card')">Register</button>
+</section>
 
-    <!-- Password input -->
-    <input id="reg-pass"  type="password" placeholder="Password" />
 
-    <!-- Button triggers register() JS function -->
-    <button onclick="register()">Register</button>
+<!--──────────────────────────────────────────────────────────────
+    2)  REGISTER PANEL  — hidden by default
+──────────────────────────────────────────────────────────────-->
+<section id="register-card" class="card hidden">
+  <h2>Create account</h2>
 
-    <!-- <pre> element shows server response -->
-    <pre id="reg-result"></pre>
-  </section>
+  <input id="reg-email"    type="email"    placeholder="Email">
+  <input id="reg-pass1"    type="password" placeholder="Password">
+  <input id="reg-pass2"    type="password" placeholder="Confirm password">
 
-  <!--─────────────────────────────────────────────────────────────-->
-  <!--   2) LOGIN FORM                                            -->
-  <!--─────────────────────────────────────────────────────────────-->
-  <section>
-    <h2>Login</h2>
+  <div id="reg-error" class="error"></div>
 
-    <!-- Same fields but we’ll reuse them for login -->
-    <input id="log-email" type="email"     placeholder="Email" />
-    <input id="log-pass"  type="password"  placeholder="Password" />
+  <button onclick="register()">Register</button>
+  <pre id="reg-result"></pre>
 
-    <button onclick="login()">Login</button>
+  <p style="text-align:center; margin-top:1rem;">
+    Already have an account?
+    <a href="#" onclick="showPanel('login-card'); return false;">Log in</a>
+  </p>
+</section>
 
-    <!-- Shows “Logged in” or error json -->
-    <pre id="log-result"></pre>
-  </section>
 
-  <!--─────────────────────────────────────────────────────────────-->
-  <!--   3) CALCULATOR (FOR PROTECTED ROUTE)                      -->
-  <!--─────────────────────────────────────────────────────────────-->
-  <section>
-    <h2>Calculate (requires login)</h2>
+<!--──────────────────────────────────────────────────────────────
+    3)  LOGIN PANEL  — hidden by default
+──────────────────────────────────────────────────────────────-->
+<section id="login-card" class="card hidden">
+  <h2>Welcome back</h2>
 
-    <input id="a" type="number" placeholder="Number a" />
-    <input id="b" type="number" placeholder="Number b" />
+  <input id="log-email" type="email"    placeholder="Email">
+  <input id="log-pass"  type="password" placeholder="Password">
 
-    <button onclick="calculate()">Calculate</button>
+  <div id="log-error" class="error"></div>
 
-    <pre id="calc-result"></pre>
-  </section>
+  <button onclick="login()">Login</button>
+  <pre id="log-result"></pre>
 
-  <!--─────────────────────────────────────────────────────────────-->
-  <!--   FRONT-END SCRIPT – 100% client-side JS                   -->
-  <!--─────────────────────────────────────────────────────────────-->
-  <script>
-    /**
-     * We'll store the JWT in this variable (memory only).
-     * For persistence, you could use localStorage.
-     */
-    let token = null;
+  <p style="text-align:center; margin-top:1rem;">
+    Need an account?
+    <a href="#" onclick="showPanel('register-card'); return false;">Register</a>
+  </p>
+</section>
 
-    /* ------------------------------------------------------------
-       REGISTER: POST /register with { email, password }
-       ------------------------------------------------------------*/
-    async function register() {
-      // Grab values from inputs
-      const email    = document.getElementById('reg-email').value;
-      const password = document.getElementById('reg-pass').value;
 
-      // Send to backend
-      const res  = await fetch('/register', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email, password })
-      });
+<!--──────────────────────────────────────────────────────────────
+    4)  CALCULATOR PANEL  — hidden until authenticated
+──────────────────────────────────────────────────────────────-->
+<section id="calc-card" class="card hidden">
+  <h2>Calculator (JWT protected)</h2>
 
-      // Show whatever server responds (success or error JSON)
-      const data = await res.json();
+  <input id="a" type="number" placeholder="Number a">
+  <input id="b" type="number" placeholder="Number b">
+
+  <button onclick="calculate()">Calculate</button>
+
+  <pre id="calc-result"></pre>
+
+  <p style="text-align:center; margin-top:1rem;">
+    <a href="#" onclick="logout(); return false;">Log out</a>
+  </p>
+</section>
+
+
+<!--──────────────────────────────────────────────────────────────
+    5)  FRONT-END SCRIPT
+──────────────────────────────────────────────────────────────-->
+<script>
+  /*──────────────────────────────────────────────────────────
+      GLOBAL STATE
+  ──────────────────────────────────────────────────────────*/
+  let token = null;        // holds JWT (not persisted between refreshes)
+  const pwdRegex =
+    /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/; // ≥8 chars, cap, number, symbol
+
+  /*──────────────────────────────────────────────────────────
+      UI HELPERS
+  ──────────────────────────────────────────────────────────*/
+  /**
+   * Hide all major panels, then show the requested one.
+   * @param {string} id  – id of the panel to show
+   */
+  function showPanel(id) {
+    ['landing','register-card','login-card','calc-card']
+      .forEach(el => document.getElementById(el).classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+
+    // Clear any error/result boxes when switching
+    ['reg-error','log-error','reg-result','log-result'].forEach(el=>{
+      const box = document.getElementById(el);
+      if (box) box.textContent = '';
+    });
+  }
+
+  /*──────────────────────────────────────────────────────────
+      REGISTER  (POST /register)
+  ──────────────────────────────────────────────────────────*/
+  async function register() {
+    const email = document.getElementById('reg-email').value.trim();
+    const p1    = document.getElementById('reg-pass1').value;
+    const p2    = document.getElementById('reg-pass2').value;
+    const errBox= document.getElementById('reg-error');
+    errBox.textContent = '';                      // reset error
+
+    /* Client-side validation */
+    if (!email || !p1 || !p2) {
+      errBox.textContent = 'All fields required';
+      return;
+    }
+    if (p1 !== p2) {
+      errBox.textContent = 'Passwords do not match';
+      return;
+    }
+    if (!pwdRegex.test(p1)) {
+      errBox.textContent =
+        'Password must be ≥8 chars and include:\n• one capital\n• one number\n• one symbol';
+      return;
+    }
+
+    /* Send to backend */
+    const res  = await fetch('/register', {
+      method: 'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body:   JSON.stringify({ email, password:p1 })
+    });
+
+    const data = await res.json();
+    document.getElementById('reg-result').textContent =
+      JSON.stringify(data,null,2);
+
+    if (res.ok) {                          // success → switch to login
       document.getElementById('reg-result').textContent =
-        JSON.stringify(data, null, 2);
+        '✅ Registered — now log in.';
+      showPanel('login-card');
+      document.getElementById('log-email').value = email; // prefill for convenience
+    }
+  }
+
+  /*──────────────────────────────────────────────────────────
+      LOGIN  (POST /login)
+  ──────────────────────────────────────────────────────────*/
+  async function login() {
+    const email = document.getElementById('log-email').value.trim();
+    const password = document.getElementById('log-pass').value;
+    const errBox   = document.getElementById('log-error');
+    errBox.textContent = '';
+
+    if (!email || !password) {
+      errBox.textContent = 'Email + password required';
+      return;
     }
 
-    /* ------------------------------------------------------------
-       LOGIN: POST /login, expect { token } back
-       ------------------------------------------------------------*/
-    async function login() {
-      const email    = document.getElementById('log-email').value;
-      const password = document.getElementById('log-pass').value;
+    const res  = await fetch('/login', {
+      method: 'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body:   JSON.stringify({ email, password })
+    });
 
-      const res  = await fetch('/login', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email, password })
-      });
-
-      const data = await res.json();
-
-      // If login successful, server returns { token: '...' }
-      if (data.token) {
-        token = data.token; // save JWT for later requests
-        document.getElementById('log-result').textContent =
-          '✅ Logged in — token stored in memory.';
-      } else {
-        // Show error (e.g., invalid credentials)
-        document.getElementById('log-result').textContent =
-          JSON.stringify(data, null, 2);
-      }
+    const data = await res.json();
+    if (res.ok && data.token) {
+      token = data.token;           // save JWT in memory
+      showPanel('calc-card');       // reveal calculator
+    } else {
+      errBox.textContent = data.error || 'Login failed';
     }
+  }
 
-    /* ------------------------------------------------------------
-       CALCULATE: POST /api/calculate  (requires Bearer token)
-       ------------------------------------------------------------*/
-    async function calculate() {
-      // Read and convert inputs
-      const a = parseFloat(document.getElementById('a').value);
-      const b = parseFloat(document.getElementById('b').value);
+  /*──────────────────────────────────────────────────────────
+      CALCULATE  (POST /api/calculate) – protected
+  ──────────────────────────────────────────────────────────*/
+  async function calculate() {
+    if (!token) { alert('Please log in first'); return; }
 
-      const res = await fetch('/api/calculate', {
-        method:  'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // The critical part: send token in Authorization header
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ a, b })
-      });
+    const a = parseFloat(document.getElementById('a').value);
+    const b = parseFloat(document.getElementById('b').value);
 
-      const data = await res.json();
-      document.getElementById('calc-result').textContent =
-        JSON.stringify(data, null, 2);
-    }
-  </script>
+    const res = await fetch('/api/calculate', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':`Bearer ${token}`
+      },
+      body:JSON.stringify({ a, b })
+    });
+
+    const data = await res.json();
+    document.getElementById('calc-result').textContent =
+      JSON.stringify(data,null,2);
+  }
+
+  /*──────────────────────────────────────────────────────────
+      LOGOUT  – simply forget the token and return to landing
+  ──────────────────────────────────────────────────────────*/
+  function logout() {
+    token = null;
+    showPanel('landing');
+  }
+</script>
+
 </body>
 </html>
