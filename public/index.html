@@ -66,7 +66,6 @@
 <!-- 4️⃣ Calculator -->
 <section id="calc" class="card hidden">
   <h2>Calculator (saved)</h2>
-
   <input id="scenario-name" placeholder="Scenario name">
   <input id="a" type="number" placeholder="Number a">
   <input id="b" type="number" placeholder="Number b">
@@ -74,9 +73,10 @@
   <button onclick="saveAndCalc()">Save & Calculate</button>
   <pre id="calc-res"></pre>
 
-  <!-- ✅ Dropdown list -->
+  <!-- Saved list -->
   <h3 style="margin-top:1.3rem;">Saved scenarios</h3>
   <select id="scenario-list" style="width:100%;">
+    <!-- ✨ ADDED default option -->
     <option value="">-- Select a saved scenario --</option>
   </select>
   <button onclick="loadScenario()">Load</button>
@@ -85,13 +85,19 @@
      <a href="#" onclick="logout();return false;">Log out</a></p>
 </section>
 
+<!-- ✨ MOVED: Script now at very bottom so functions exist
+     before any onclick handlers are evaluated -->
 <script>
-/* ========= State & small helpers =========== */
+/* ========= State & helper constants =========== */
 let token=null;
 const pwdRx=/^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 const panels=['landing','login','register','calc'];
-function show(id){ panels.forEach(p=>document.getElementById(p).classList.add('hidden'));
-                   document.getElementById(id).classList.remove('hidden'); }
+
+/* ========= Panel switcher ========= */
+function show(id){
+  panels.forEach(p=>document.getElementById(p).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
 
 /* ========= Register ========= */
 async function register(){
@@ -124,3 +130,57 @@ async function login(){
   });
   const data=await r.json();
   if(r.ok&&data.token){
+     token=data.token;
+     show('calc');
+     refreshList();                          // refresh dropdown
+  }else{
+     err.textContent=data.error||'Login failed';
+  }
+}
+
+/* ========= Save + Calculate ========= */
+async function saveAndCalc(){
+  if(!token){alert('Login first');return;}
+  const name=document.getElementById('scenario-name').value.trim()||'Untitled';
+  const a=parseFloat(document.getElementById('a').value);
+  const b=parseFloat(document.getElementById('b').value);
+
+  const r=await fetch('/api/calculate',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body:JSON.stringify({name,a,b})
+  });
+  const data=await r.json();
+  document.getElementById('calc-res').textContent=JSON.stringify(data,null,2);
+  if(r.ok) refreshList();                    // update dropdown
+}
+
+/* ========= Dropdown list ========= */
+async function refreshList(){
+  const r=await fetch('/api/scenarios',{ headers:{'Authorization':'Bearer '+token}});
+  if(!r.ok){ console.error('List fetch error',await r.text()); return; }
+  const list=await r.json();
+  const sel=document.getElementById('scenario-list');
+  sel.innerHTML='<option value="">-- Select a saved scenario --</option>';
+  list.forEach(sc=>{
+    const opt=document.createElement('option');
+    opt.value=JSON.stringify(sc);
+    opt.textContent=`${sc.name} (a=${sc.a}, b=${sc.b})`;
+    sel.appendChild(opt);
+  });
+}
+function loadScenario(){
+  const sel=document.getElementById('scenario-list');
+  if(!sel.value){ alert('Choose a scenario'); return; }
+  const sc=JSON.parse(sel.value);
+  document.getElementById('scenario-name').value=sc.name;
+  document.getElementById('a').value=sc.a;
+  document.getElementById('b').value=sc.b;
+  document.getElementById('calc-res').textContent=`Loaded scenario #${sc.id}`;
+}
+
+/* ========= Logout ========= */
+function logout(){ token=null; show('landing'); }
+</script>
+</body>
+</html>
