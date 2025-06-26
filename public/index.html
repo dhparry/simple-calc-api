@@ -5,182 +5,265 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Terra • Auth & Calculator</title>
 
-  <!-- Simple CSS (swap for Tailwind later) -->
+  <!-- Basic styling (can swap for Tailwind later) -->
   <style>
-    :root{ --green:#009970; --gray:#f3f3f3; }
-    /* Layout helpers */
-    body,html{ margin:0; height:100%; font-family:sans-serif; }
-    .center{ display:flex; flex-direction:column; align-items:center; justify-content:center; }
-    .hidden{ display:none; }
-    /* Landing */
-    #landing h1{ font-size:3.5rem; margin:0; color:var(--green); }
-    #landing button{ width:180px; padding:.7rem 1rem; margin:.5rem 0;
-                     font-size:1rem; border:none; border-radius:6px;
-                     background:var(--green); color:#fff; cursor:pointer; }
-    /* Card panels */
-    .card{ width:min(90%,420px); border:1px solid #ccc; border-radius:8px;
-           padding:1.5rem; margin:2rem auto; background:#fff;
-           box-shadow:0 4px 10px rgba(0,0,0,.06); }
-    .card input{ width:100%; padding:.6rem; margin:.3rem 0 .8rem;
-                 border:1px solid #ccc; border-radius:4px; }
-    .card button{ width:100%; padding:.7rem; border:none; border-radius:4px;
-                  background:var(--green); color:#fff; font-size:1rem; cursor:pointer; }
-    pre{ background:var(--gray); padding:.8rem; white-space:pre-wrap; }
-    .error{ color:#c0392b; margin-top:.3rem; white-space:pre-wrap; }
+    :root { --green: #009970; --gray: #f3f3f3; }
+
+    body, html {
+      margin: 0;
+      height: 100%;
+      font-family: sans-serif;
+    }
+
+    .center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hidden { display: none; }
+
+    #landing h1 {
+      font-size: 3.5rem;
+      margin: 0;
+      color: var(--green);
+    }
+
+    #landing button {
+      width: 180px;
+      padding: 0.7rem 1rem;
+      margin: 0.5rem 0;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      background: var(--green);
+      color: white;
+      cursor: pointer;
+    }
+
+    .card {
+      width: min(90%, 420px);
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 2rem auto;
+      background: white;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    }
+
+    .card input {
+      width: 100%;
+      padding: 0.6rem;
+      margin: 0.3rem 0 0.8rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .card button {
+      width: 100%;
+      padding: 0.7rem;
+      border: none;
+      border-radius: 4px;
+      background: var(--green);
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    pre {
+      background: var(--gray);
+      padding: 0.8rem;
+      white-space: pre-wrap;
+    }
+
+    .error {
+      color: #c0392b;
+      margin-top: 0.3rem;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 
 <body>
-<!-- 1️⃣ Landing -->
-<section id="landing" class="center" style="height:100%;">
-  <h1>Terra</h1>
-  <button onclick="show('login')">Login</button>
-  <button onclick="show('register')">Register</button>
-</section>
+  <!-- 1️⃣ Landing screen -->
+  <section id="landing" class="center" style="height:100%;">
+    <h1>Terra</h1>
+    <button id="btn-login">Login</button>
+    <button id="btn-register">Register</button>
+  </section>
 
-<!-- 2️⃣ Register -->
-<section id="register" class="card hidden">
-  <h2>Create account</h2>
-  <input id="reg-email" type="email"    placeholder="Email">
-  <input id="reg-pass1" type="password" placeholder="Password">
-  <input id="reg-pass2" type="password" placeholder="Confirm password">
-  <div id="reg-err" class="error"></div>
-  <button onclick="register()">Register</button>
-  <pre id="reg-res"></pre>
-  <p style="text-align:center;margin-top:1rem;">Have an account?
-     <a href="#" onclick="show('login');return false;">Log in</a></p>
-</section>
+  <!-- 2️⃣ Register -->
+  <section id="register" class="card hidden">
+    <h2>Create account</h2>
+    <input id="reg-email" type="email" placeholder="Email">
+    <input id="reg-pass1" type="password" placeholder="Password">
+    <input id="reg-pass2" type="password" placeholder="Confirm password">
+    <div id="reg-err" class="error"></div>
+    <button id="submit-register">Register</button>
+    <pre id="reg-res"></pre>
+    <p style="text-align:center;margin-top:1rem;">Have an account?
+      <a href="#" id="to-login">Log in</a>
+    </p>
+  </section>
 
-<!-- 3️⃣ Login -->
-<section id="login" class="card hidden">
-  <h2>Welcome back</h2>
-  <input id="log-email" type="email"    placeholder="Email">
-  <input id="log-pass"  type="password" placeholder="Password">
-  <div id="log-err" class="error"></div>
-  <button onclick="login()">Login</button>
-  <pre id="log-res"></pre>
-  <p style="text-align:center;margin-top:1rem;">Need an account?
-     <a href="#" onclick="show('register');return false;">Register</a></p>
-</section>
+  <!-- 3️⃣ Login -->
+  <section id="login" class="card hidden">
+    <h2>Welcome back</h2>
+    <input id="log-email" type="email" placeholder="Email">
+    <input id="log-pass" type="password" placeholder="Password">
+    <div id="log-err" class="error"></div>
+    <button id="submit-login">Login</button>
+    <pre id="log-res"></pre>
+    <p style="text-align:center;margin-top:1rem;">Need an account?
+      <a href="#" id="to-register">Register</a>
+    </p>
+  </section>
 
-<!-- 4️⃣ Calculator -->
-<section id="calc" class="card hidden">
-  <h2>Calculator (saved)</h2>
-  <input id="scenario-name" placeholder="Scenario name">
-  <input id="a" type="number" placeholder="Number a">
-  <input id="b" type="number" placeholder="Number b">
+  <!-- 4️⃣ Calculator -->
+  <section id="calc" class="card hidden">
+    <h2>Calculator (saved)</h2>
+    <input id="scenario-name" placeholder="Scenario name">
+    <input id="a" type="number" placeholder="Number a">
+    <input id="b" type="number" placeholder="Number b">
+    <button id="calc-btn">Save & Calculate</button>
+    <pre id="calc-res"></pre>
 
-  <button onclick="saveAndCalc()">Save & Calculate</button>
-  <pre id="calc-res"></pre>
+    <h3 style="margin-top:1.3rem;">Saved scenarios</h3>
+    <select id="scenario-list" style="width:100%;">
+      <option value="">-- Select a saved scenario --</option>
+    </select>
+    <button id="load-btn">Load</button>
 
-  <!-- Saved list -->
-  <h3 style="margin-top:1.3rem;">Saved scenarios</h3>
-  <select id="scenario-list" style="width:100%;">
-    <!-- ✨ ADDED default option -->
-    <option value="">-- Select a saved scenario --</option>
-  </select>
-  <button onclick="loadScenario()">Load</button>
+    <p style="text-align:center;margin-top:1rem;">
+      <a href="#" id="logout">Log out</a>
+    </p>
+  </section>
 
-  <p style="text-align:center;margin-top:1rem;">
-     <a href="#" onclick="logout();return false;">Log out</a></p>
-</section>
+  <!-- ✅ Script at end to ensure all DOM is ready -->
+  <script>
+    let token = null;
+    const pwdRx = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+    const panels = ['landing', 'login', 'register', 'calc'];
 
-<!-- ✨ MOVED: Script now at very bottom so functions exist
-     before any onclick handlers are evaluated -->
-<script>
-/* ========= State & helper constants =========== */
-let token=null;
-const pwdRx=/^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-const panels=['landing','login','register','calc'];
+    function show(id) {
+      panels.forEach(p => document.getElementById(p).classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+    }
 
-/* ========= Panel switcher ========= */
-function show(id){
-  panels.forEach(p=>document.getElementById(p).classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
-}
+    async function register() {
+      const em = document.getElementById('reg-email').value.trim();
+      const p1 = document.getElementById('reg-pass1').value;
+      const p2 = document.getElementById('reg-pass2').value;
+      const err = document.getElementById('reg-err');
+      err.textContent = '';
 
-/* ========= Register ========= */
-async function register(){
-  const em=document.getElementById('reg-email').value.trim();
-  const p1=document.getElementById('reg-pass1').value;
-  const p2=document.getElementById('reg-pass2').value;
-  const err=document.getElementById('reg-err'); err.textContent='';
-  if(!em||!p1||!p2){err.textContent='All fields required';return;}
-  if(p1!==p2){err.textContent='Passwords do not match';return;}
-  if(!pwdRx.test(p1)){err.textContent='Weak password (≥8, cap, num, symbol)';return;}
+      if (!em || !p1 || !p2) { err.textContent = 'All fields required'; return; }
+      if (p1 !== p2) { err.textContent = 'Passwords do not match'; return; }
+      if (!pwdRx.test(p1)) {
+        err.textContent = 'Weak password (≥8 chars, 1 cap, 1 num, 1 symbol)'; return;
+      }
 
-  const res=await fetch('/register',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({email:em,password:p1})
-  });
-  document.getElementById('reg-res').textContent=await res.text();
-  if(res.ok){ show('login'); document.getElementById('log-email').value=em; }
-}
+      const res = await fetch('/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: em, password: p1 })
+      });
 
-/* ========= Login ========= */
-async function login(){
-  const em=document.getElementById('log-email').value.trim();
-  const pw=document.getElementById('log-pass').value;
-  const err=document.getElementById('log-err'); err.textContent='';
-  if(!em||!pw){err.textContent='Email & password required';return;}
+      document.getElementById('reg-res').textContent = await res.text();
+      if (res.ok) {
+        show('login');
+        document.getElementById('log-email').value = em;
+      }
+    }
 
-  const r=await fetch('/login',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({email:em,password:pw})
-  });
-  const data=await r.json();
-  if(r.ok&&data.token){
-     token=data.token;
-     show('calc');
-     refreshList();                          // refresh dropdown
-  }else{
-     err.textContent=data.error||'Login failed';
-  }
-}
+    async function login() {
+      const em = document.getElementById('log-email').value.trim();
+      const pw = document.getElementById('log-pass').value;
+      const err = document.getElementById('log-err');
+      err.textContent = '';
 
-/* ========= Save + Calculate ========= */
-async function saveAndCalc(){
-  if(!token){alert('Login first');return;}
-  const name=document.getElementById('scenario-name').value.trim()||'Untitled';
-  const a=parseFloat(document.getElementById('a').value);
-  const b=parseFloat(document.getElementById('b').value);
+      if (!em || !pw) { err.textContent = 'Email & password required'; return; }
 
-  const r=await fetch('/api/calculate',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-    body:JSON.stringify({name,a,b})
-  });
-  const data=await r.json();
-  document.getElementById('calc-res').textContent=JSON.stringify(data,null,2);
-  if(r.ok) refreshList();                    // update dropdown
-}
+      const r = await fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: em, password: pw })
+      });
 
-/* ========= Dropdown list ========= */
-async function refreshList(){
-  const r=await fetch('/api/scenarios',{ headers:{'Authorization':'Bearer '+token}});
-  if(!r.ok){ console.error('List fetch error',await r.text()); return; }
-  const list=await r.json();
-  const sel=document.getElementById('scenario-list');
-  sel.innerHTML='<option value="">-- Select a saved scenario --</option>';
-  list.forEach(sc=>{
-    const opt=document.createElement('option');
-    opt.value=JSON.stringify(sc);
-    opt.textContent=`${sc.name} (a=${sc.a}, b=${sc.b})`;
-    sel.appendChild(opt);
-  });
-}
-function loadScenario(){
-  const sel=document.getElementById('scenario-list');
-  if(!sel.value){ alert('Choose a scenario'); return; }
-  const sc=JSON.parse(sel.value);
-  document.getElementById('scenario-name').value=sc.name;
-  document.getElementById('a').value=sc.a;
-  document.getElementById('b').value=sc.b;
-  document.getElementById('calc-res').textContent=`Loaded scenario #${sc.id}`;
-}
+      const data = await r.json();
+      if (r.ok && data.token) {
+        token = data.token;
+        show('calc');
+        refreshList();
+      } else {
+        err.textContent = data.error || 'Login failed';
+      }
+    }
 
-/* ========= Logout ========= */
-function logout(){ token=null; show('landing'); }
-</script>
+    async function saveAndCalc() {
+      if (!token) return alert("Please log in first.");
+      const name = document.getElementById('scenario-name').value.trim() || 'Untitled';
+      const a = parseFloat(document.getElementById('a').value);
+      const b = parseFloat(document.getElementById('b').value);
+
+      const r = await fetch('/api/calculate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ name, a, b })
+      });
+
+      const data = await r.json();
+      document.getElementById('calc-res').textContent = JSON.stringify(data, null, 2);
+      if (r.ok) refreshList();
+    }
+
+    async function refreshList() {
+      const r = await fetch('/api/scenarios', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+
+      const list = await r.json();
+      const sel = document.getElementById('scenario-list');
+      sel.innerHTML = '<option value="">-- Select a saved scenario --</option>';
+      list.forEach(sc => {
+        const o = document.createElement('option');
+        o.value = JSON.stringify(sc);
+        o.textContent = `${sc.name} (a=${sc.a}, b=${sc.b})`;
+        sel.appendChild(o);
+      });
+    }
+
+    function loadScenario() {
+      const sel = document.getElementById('scenario-list');
+      if (!sel.value) return alert('Choose a scenario');
+      const sc = JSON.parse(sel.value);
+      document.getElementById('scenario-name').value = sc.name;
+      document.getElementById('a').value = sc.a;
+      document.getElementById('b').value = sc.b;
+      document.getElementById('calc-res').textContent = `Loaded scenario #${sc.id}`;
+    }
+
+    function logout() {
+      token = null;
+      show('landing');
+    }
+
+    // ✅ Attach event listeners after DOM is ready
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('btn-login').addEventListener('click', () => show('login'));
+      document.getElementById('btn-register').addEventListener('click', () => show('register'));
+      document.getElementById('to-register').addEventListener('click', e => { e.preventDefault(); show('register'); });
+      document.getElementById('to-login').addEventListener('click', e => { e.preventDefault(); show('login'); });
+      document.getElementById('submit-register').addEventListener('click', register);
+      document.getElementById('submit-login').addEventListener('click', login);
+      document.getElementById('calc-btn').addEventListener('click', saveAndCalc);
+      document.getElementById('load-btn').addEventListener('click', loadScenario);
+      document.getElementById('logout').addEventListener('click', e => { e.preventDefault(); logout(); });
+    });
+  </script>
 </body>
 </html>
