@@ -140,6 +140,7 @@ app.post("/api/calculate", authMiddleware, (req, res) => {
   app.get("/api/scenarios", async (req, res) => {
     try {
       const scenarios = await prisma.calculation.findMany({
+        where: { user: { email: req.user.email } },
         orderBy: { createdAt: "desc" },
       });
       res.json(scenarios);
