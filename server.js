@@ -151,6 +151,27 @@ app.post('/api/calculate', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ *  POST /api/compute-only  (protected)
+ *  Returns result only (no DB write)
+ */
+app.post("/api/compute-only", authMiddleware, (req, res) => {
+  const { a, b } = req.body;
+
+  const numA = parseFloat(a);
+  const numB = parseFloat(b);
+
+  if (Number.isNaN(numA) || Number.isNaN(numB)) {
+    return res.status(400).json({ error: "Invalid input numbers" });
+  }
+
+  res.json({
+    user: req.user.email,
+    sum: numA + numB,
+    division: numB !== 0 ? numA / numB : null,
+  });
+});
+
 /* -----------------------------------------------------------
    GET /api/scenarios    (protected)
    Returns an array of saved calculations for the logged user
