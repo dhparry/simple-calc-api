@@ -301,7 +301,17 @@
         scenarioSel.innerHTML =
           '<option value="">-- Select a scenario --</option>';
 
-        const filtered = allScenarios.filter((s) => s.project === project);
+        // Debugging output
+        console.log("Selected project:", project);
+        console.log("All scenarios:", allScenarios);
+
+        // Make comparison case-insensitive
+        const filtered = allScenarios.filter(
+          (s) => s.project?.toLowerCase() === project.toLowerCase()
+        );
+
+        console.log("Filtered scenarios:", filtered);
+
         filtered.forEach((sc) => {
           const opt = document.createElement("option");
           opt.value = JSON.stringify(sc);
