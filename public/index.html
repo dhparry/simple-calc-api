@@ -136,7 +136,9 @@
       <input id="scenario-name" placeholder="Scenario name" />
       <input id="a" type="number" placeholder="Number a" />
       <input id="b" type="number" placeholder="Number b" />
-      <button id="calc-btn">Save & Calculate</button>
+      <button id="calc-only-btn">Calculate (Only)</button>
+      <button id="save-btn">Save & Calculate</button>
+
       <pre id="calc-res"></pre>
 
       <h3 style="margin-top: 1.3rem">Saved scenarios</h3>
@@ -239,6 +241,29 @@
         } else {
           err.textContent = data.error || "Login failed";
         }
+      }
+
+      async function calculateOnly() {
+        if (!token) return alert("Please log in first.");
+
+        const a = parseFloat(document.getElementById("a").value);
+        const b = parseFloat(document.getElementById("b").value);
+
+        const r = await fetch("/api/compute-only", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + token,
+          },
+          body: JSON.stringify({ a, b }),
+        });
+
+        const data = await r.json();
+        document.getElementById("calc-res").textContent = JSON.stringify(
+          data,
+          null,
+          2
+        );
       }
 
       async function saveAndCalc() {
@@ -385,8 +410,12 @@
           .getElementById("submit-login")
           .addEventListener("click", login);
         document
-          .getElementById("calc-btn")
-          .addEventListener("click", saveAndCalc);
+          .getElementById("calc-only-btn")
+          .addEventListener("click", calculateOnly);
+
+        document
+          .getElementById("save-btn")
+          .addEventListener("click", saveScenario); // rename if you changed
         document
           .getElementById("load-btn")
           .addEventListener("click", loadScenario);
